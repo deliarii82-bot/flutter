@@ -1,10 +1,8 @@
-
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
 
 class ApiService {
   static const String baseUrl = 'https://sijala.biz.id/api/v1';
@@ -24,12 +22,8 @@ class ApiService {
     await prefs.remove('token');
   }
 
-  static Future<Map<String, String>> headers({
-    bool withAuth = true,
-  }) async {
-    final result = <String, String>{
-      'Accept': 'application/json',
-    };
+  static Future<Map<String, String>> headers({bool withAuth = true}) async {
+    final result = <String, String>{'Accept': 'application/json'};
 
     if (withAuth) {
       final token = await getToken();
@@ -56,9 +50,7 @@ class ApiService {
 
   static String getMessage(dynamic data) {
     if (data is Map) {
-      return (data['message'] ??
-              data['error'] ??
-              'Terjadi kesalahan.')
+      return (data['message'] ?? data['error'] ?? 'Terjadi kesalahan.')
           .toString();
     }
 
@@ -66,8 +58,7 @@ class ApiService {
   }
 
   static void checkResponse(http.Response response, dynamic data) {
-    if (response.statusCode < 200 ||
-        response.statusCode >= 300) {
+    if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception(getMessage(data));
     }
 
@@ -117,27 +108,19 @@ class ApiService {
   }
 
   // LOGIN
-  static Future<dynamic> login(
-    String email,
-    String password,
-  ) async {
-    final result = await post(
-      '/login',
-      {
-        'email': email,
-        'password': password,
-      },
-      withAuth: false,
-    );
+  static Future<dynamic> login(String email, String password) async {
+    final result = await post('/login', {
+      'email': email,
+      'password': password,
+    }, withAuth: false);
 
     final data = unwrap(result);
 
     if (data is Map) {
-      final token = data['token'] ??
+      final token =
+          data['token'] ??
           data['access_token'] ??
-          (data['user'] is Map
-              ? data['user']['token']
-              : null);
+          (data['user'] is Map ? data['user']['token'] : null);
 
       if (token != null && token.toString().isNotEmpty) {
         await saveToken(token.toString());
@@ -151,17 +134,21 @@ class ApiService {
   static Future<dynamic> register(
     String name,
     String email,
-    String password,
+    String phone,
+    String gender,
   ) async {
-    return post(
-      '/register',
-      {
-        'name': name,
-        'email': email,
-        'password': password,
-      },
-      withAuth: false,
-    );
+    String shortGender = (gender.toLowerCase().contains('laki')) ? 'L' : 'P';
+
+    return post('/register', {
+      'name': name,
+      'email': email,
+      'phone': phone,
+      'no_telp': phone,
+      'gender': shortGender,
+      'jenis_kelamin': shortGender,
+      'password': 'password123',
+      'password_confirmation': 'password123',
+    }, withAuth: false);
   }
 
   // DASHBOARD
@@ -184,7 +171,7 @@ class ApiService {
     return get('/surveys/$id');
   }
 
-  // SIMPAN ATAU EDIT SURVEY
+  // SIMPAN ATAU EDIT SURVEY (Mendukung File Mobile & Bytes Web)
   static Future<dynamic> saveSurvey({
     int? id,
     required String title,
@@ -192,13 +179,16 @@ class ApiService {
     required String description,
     required String latitude,
     required String longitude,
-    File? photo,
+    File? photoFile,
+    Uint8List? photoBytes,
   }) async {
     final token = await getToken();
 
+    final String endpoint = id != null ? '/surveys/$id' : '/surveys/save';
+    
     final request = http.MultipartRequest(
       'POST',
-      Uri.parse('$baseUrl/surveys/save'),
+      Uri.parse('$baseUrl$endpoint'),
     );
 
     request.headers['Accept'] = 'application/json';
@@ -215,22 +205,27 @@ class ApiService {
 
     if (id != null) {
       request.fields['_method'] = 'PUT';
-      request.fields['id'] = id.toString();
     }
 
-    if (photo != null) {
+    // Tangani Foto untuk Mobile (File)
+    if (photoFile != null) {
       request.files.add(
-        await http.MultipartFile.fromPath(
+        await http.MultipartFile.fromPath('photo', photoFile.path),
+      );
+    } 
+    // Tangani Foto untuk Web (Uint8List Bytes)
+    else if (photoBytes != null && photoBytes.isNotEmpty) {
+      request.files.add(
+        http.MultipartFile.fromBytes(
           'photo',
-          photo.path,
+          photoBytes,
+          filename: 'survey_photo_${DateTime.now().millisecondsSinceEpoch}.jpg',
         ),
       );
     }
 
     final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(
-      streamedResponse,
-    );
+    final response = await http.Response.fromStream(streamedResponse);
 
     final data = decodeResponse(response);
     checkResponse(response, data);
@@ -248,14 +243,19 @@ class ApiService {
     return get('/profile');
   }
 
-  // UPDATE PROFIL
+  
+
   static Future<dynamic> updateProfile({
     required String name,
     required String email,
+    required String phone,
+    required String gender,
   }) async {
     return post('/profile/update', {
       'name': name,
       'email': email,
+      'phone': phone,
+      'gender': gender,
     });
   }
 

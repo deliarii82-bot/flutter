@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../models/survey.dart';
@@ -22,6 +21,10 @@ class _SurveyDetailScreenState extends State<SurveyDetailScreen> {
   Survey? _survey;
   bool _loading = true;
   String? _error;
+
+  // Definisi Warna Hijau Tua
+  final Color primaryGreen = const Color(0xFF00695C); // Hijau Tua (Teal 800)
+  final Color backgroundColor = const Color(0xFFF4F8F6); // Background hijau sangat pucat/clean
 
   @override
   void initState() {
@@ -71,13 +74,29 @@ class _SurveyDetailScreenState extends State<SurveyDetailScreen> {
     }
   }
 
+  // Fungsi URL Foto yang Diperbaiki Secara Mutlak
   String _photoUrl(String photo) {
-    if (photo.startsWith('http://') ||
-        photo.startsWith('https://')) {
-      return photo;
+    final cleanPhoto = photo.trim();
+
+    if (cleanPhoto.startsWith('http://') || cleanPhoto.startsWith('https://')) {
+      return cleanPhoto;
     }
 
-    return 'https://sijala.biz.id/api/image/$photo';
+    // Hilangkan slash di depan jika ada
+    final pathWithoutSlash = cleanPhoto.startsWith('/') ? cleanPhoto.substring(1) : cleanPhoto;
+
+    // Jika path sudah mengandung 'storage/', langsung gabungkan dengan domain utama
+    if (pathWithoutSlash.startsWith('storage/')) {
+      return 'https://sijala.biz.id/$pathWithoutSlash';
+    }
+
+    // Jika path dari database berupa nama file atau folder (misal: surveys/xxx.jpg atau xxx.jpg)
+    // Cek apakah sudah ada folder 'surveys/' di dalamnya
+    if (pathWithoutSlash.contains('surveys/')) {
+      return 'https://sijala.biz.id/storage/$pathWithoutSlash';
+    } else {
+      return 'https://sijala.biz.id/storage/surveys/$pathWithoutSlash';
+    }
   }
 
   Widget _detailItem(
@@ -90,7 +109,7 @@ class _SurveyDetailScreenState extends State<SurveyDetailScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.indigo, size: 25),
+          Icon(icon, color: primaryGreen, size: 25),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -134,10 +153,10 @@ class _SurveyDetailScreenState extends State<SurveyDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F5FA),
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         title: const Text('Detail Survey'),
-        backgroundColor: Colors.indigo,
+        backgroundColor: primaryGreen,
         foregroundColor: Colors.white,
         actions: [
           if (_survey != null)
@@ -149,8 +168,8 @@ class _SurveyDetailScreenState extends State<SurveyDetailScreen> {
         ],
       ),
       body: _loading
-          ? const Center(
-              child: CircularProgressIndicator(),
+          ? Center(
+              child: CircularProgressIndicator(color: primaryGreen),
             )
           : _error != null
               ? Center(
@@ -172,6 +191,10 @@ class _SurveyDetailScreenState extends State<SurveyDetailScreen> {
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: _loadDetail,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryGreen,
+                            foregroundColor: Colors.white,
+                          ),
                           child: const Text('Coba Lagi'),
                         ),
                       ],
@@ -258,9 +281,12 @@ class _SurveyDetailScreenState extends State<SurveyDetailScreen> {
                                   icon: const Icon(Icons.edit),
                                   label: const Text('Edit Survey'),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.indigo,
+                                    backgroundColor: primaryGreen,
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.all(14),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
                                 ),
                               ),

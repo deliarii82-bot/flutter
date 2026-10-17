@@ -41,11 +41,14 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text,
       );
 
-      final data = ApiService.unwrap(result);
+      // Memastikan unwrap dipanggil tanpa menyimpan variabel yang tidak terpakai
+      ApiService.unwrap(result);
 
       if (!mounted) return;
 
       final token = await ApiService.getToken();
+
+      if (!mounted) return;
 
       if (token == null || token.isEmpty) {
         throw Exception(
@@ -85,7 +88,6 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            // Padding luar dibuat cukup besar agar form tidak terlalu menempel ke tepi pinggir layar browser
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
             child: Form(
               key: _formKey,
@@ -216,7 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const RegisterScreen(),
+                             builder: (_) => const RegisterScreen(),
                             ),
                           );
                         },

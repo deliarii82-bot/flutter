@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../models/survey.dart';
@@ -7,7 +6,7 @@ import 'survey_detail_screen.dart';
 import 'survey_form_screen.dart';
 
 class SurveyScreen extends StatefulWidget {
-  SurveyScreen({super.key});
+  const SurveyScreen({super.key});
 
   @override
   State<SurveyScreen> createState() => _SurveyScreenState();
@@ -17,6 +16,11 @@ class _SurveyScreenState extends State<SurveyScreen> {
   List<Survey> _surveys = [];
   bool _loading = true;
   String? _error;
+
+  // Definisi Tema Warna Hijau Tua Konsisten
+  final Color primaryGreen = const Color(0xFF00695C);
+  final Color primaryGreenLight = const Color(0xFFE0F2F1);
+  final Color backgroundColor = const Color(0xFFF4F8F6);
 
   @override
   void initState() {
@@ -101,14 +105,14 @@ class _SurveyScreenState extends State<SurveyScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text('Hapus Survey'),
+        title: const Text('Hapus Survey'),
         content: Text(
           'Yakin ingin menghapus survey "${survey.title}"?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text('Batal'),
+            child: const Text('Batal'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(dialogContext, true),
@@ -116,7 +120,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text('Hapus'),
+            child: const Text('Hapus'),
           ),
         ],
       ),
@@ -130,7 +134,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Survey berhasil dihapus.'),
           backgroundColor: Colors.green,
         ),
@@ -154,12 +158,15 @@ class _SurveyScreenState extends State<SurveyScreen> {
   void _showSurveyMenu(Survey survey) {
     showModalBottomSheet<void>(
       context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (sheetContext) => SafeArea(
         child: Wrap(
           children: [
             ListTile(
-              leading: Icon(Icons.info_outline),
-              title: Text('Lihat Detail'),
+              leading: Icon(Icons.info_outline, color: primaryGreen),
+              title: const Text('Lihat Detail'),
               onTap: () {
                 Navigator.pop(sheetContext);
 
@@ -174,19 +181,19 @@ class _SurveyScreenState extends State<SurveyScreen> {
               },
             ),
             ListTile(
-              leading: Icon(Icons.edit_outlined),
-              title: Text('Edit Survey'),
+              leading: Icon(Icons.edit_outlined, color: primaryGreen),
+              title: const Text('Edit Survey'),
               onTap: () {
                 Navigator.pop(sheetContext);
                 _openForm(survey: survey);
               },
             ),
             ListTile(
-              leading: Icon(
+              leading: const Icon(
                 Icons.delete_outline,
                 color: Colors.red,
               ),
-              title: Text(
+              title: const Text(
                 'Hapus Survey',
                 style: TextStyle(color: Colors.red),
               ),
@@ -204,24 +211,26 @@ class _SurveyScreenState extends State<SurveyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF3F5FA),
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: Text('Data Survey'),
-        backgroundColor: Colors.indigo,
+        title: const Text('Data Survey'),
+        backgroundColor: primaryGreen,
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openForm(),
-        backgroundColor: Colors.indigo,
+        backgroundColor: primaryGreen,
         foregroundColor: Colors.white,
-        icon: Icon(Icons.add),
-        label: Text('Tambah Survey'),
+        icon: const Icon(Icons.add),
+        label: const Text('Tambah Survey'),
       ),
       body: RefreshIndicator(
+        color: primaryGreen,
         onRefresh: _loadSurveys,
         child: _loading
             ? ListView(
-                children: [
+                children: const [
                   SizedBox(height: 250),
                   Center(
                     child: CircularProgressIndicator(),
@@ -230,31 +239,35 @@ class _SurveyScreenState extends State<SurveyScreen> {
               )
             : _error != null
                 ? ListView(
-                    padding: EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(24),
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.error_outline,
                         color: Colors.red,
                         size: 48,
                       ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       Text(
                         _error!,
                         textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       Center(
                         child: ElevatedButton(
                           onPressed: _loadSurveys,
-                          child: Text('Coba Lagi'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryGreen,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Coba Lagi'),
                         ),
                       ),
                     ],
                   )
                 : _surveys.isEmpty
                     ? ListView(
-                        padding: EdgeInsets.all(24),
-                        children: [
+                        padding: const EdgeInsets.all(24),
+                        children: const [
                           SizedBox(height: 100),
                           Icon(
                             Icons.assignment_outlined,
@@ -275,7 +288,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                         ],
                       )
                     : ListView.builder(
-                        padding: EdgeInsets.fromLTRB(
+                        padding: const EdgeInsets.fromLTRB(
                           16,
                           16,
                           16,
@@ -286,25 +299,28 @@ class _SurveyScreenState extends State<SurveyScreen> {
                           final survey = _surveys[index];
 
                           return Card(
-                            margin: EdgeInsets.only(bottom: 12),
+                            margin: const EdgeInsets.only(bottom: 12),
                             elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             child: ListTile(
-                              contentPadding: EdgeInsets.all(14),
+                              contentPadding: const EdgeInsets.all(14),
                               leading: CircleAvatar(
-                                backgroundColor: Colors.indigo.shade50,
+                                backgroundColor: primaryGreenLight,
                                 child: Icon(
                                   Icons.assignment_outlined,
-                                  color: Colors.indigo,
+                                  color: primaryGreen,
                                 ),
                               ),
                               title: Text(
                                 survey.title,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               subtitle: Padding(
-                                padding: EdgeInsets.only(top: 6),
+                                padding: const EdgeInsets.only(top: 6),
                                 child: Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.start,
@@ -312,8 +328,12 @@ class _SurveyScreenState extends State<SurveyScreen> {
                                     if (survey.categoryName.isNotEmpty)
                                       Text(
                                         'Kategori: ${survey.categoryName}',
+                                        style: TextStyle(
+                                          color: primaryGreen,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
-                                    SizedBox(height: 4),
+                                    const SizedBox(height: 4),
                                     Text(
                                       survey.description.isEmpty
                                           ? 'Tidak ada deskripsi'
@@ -325,7 +345,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                                 ),
                               ),
                               trailing: IconButton(
-                                icon: Icon(Icons.more_vert),
+                                icon: const Icon(Icons.more_vert),
                                 onPressed: () =>
                                     _showSurveyMenu(survey),
                               ),

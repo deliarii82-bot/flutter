@@ -15,6 +15,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController(); // Controller No Telepon
+  String? _selectedGender; // State untuk Jenis Kelamin
+  final List<String> _genderOptions = ['Laki-laki', 'Perempuan'];
 
   bool _loading = false;
 
@@ -26,6 +29,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -38,7 +42,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       await ApiService.register(
         _nameController.text.trim(),
         _emailController.text.trim(),
-        '', // Mengirim string kosong jika password dihapus dari form
+        _phoneController.text.trim(),
+        _selectedGender ?? '',
       );
 
       if (!mounted) return;
@@ -117,7 +122,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 40),
 
-                  // Nama Lengkap (Full Lebar)
+                  // Nama Lengkap
                   TextFormField(
                     controller: _nameController,
                     textCapitalization: TextCapitalization.words,
@@ -140,7 +145,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Email (Full Lebar)
+                  // Email
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -168,9 +173,64 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       return null;
                     },
                   ),
+                  const SizedBox(height: 20),
+
+                  // Nomor Telepon
+                  TextFormField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      labelText: 'Nomor Telepon',
+                      prefixIcon: Icon(Icons.phone_outlined, color: primaryGreen),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: const OutlineInputBorder(),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryGreen, width: 2),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Nomor telepon wajib diisi';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Jenis Kelamin
+                  DropdownButtonFormField<String>(
+                    value: _selectedGender,
+                    decoration: InputDecoration(
+                      labelText: 'Jenis Kelamin',
+                      prefixIcon: Icon(Icons.wc_outlined, color: primaryGreen),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: const OutlineInputBorder(),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryGreen, width: 2),
+                      ),
+                    ),
+                    items: _genderOptions.map((String gender) {
+                      return DropdownMenuItem<String>(
+                        value: gender,
+                        child: Text(gender),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedGender = newValue;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Pilih jenis kelamin terlebih dahulu';
+                      }
+                      return null;
+                    },
+                  ),
                   const SizedBox(height: 30),
 
-                  // Tombol Daftar (Full Lebar)
                   SizedBox(
                     height: 55,
                     child: ElevatedButton(

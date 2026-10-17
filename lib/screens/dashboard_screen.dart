@@ -29,34 +29,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadDashboard();
   }
 
-  Future<void> _loadDashboard() async {
+ Future<void> _loadDashboard() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
     try {
+      // 1. Ambil data Dashboard (untuk Total Survey)
       final result = await ApiService.getDashboard();
       final data = ApiService.unwrap(result);
 
       if (data is Map) {
-        final user = data['user'] ?? data['profile'];
+        final jumlah = data['total_surveys'] ??
+            data['survey_count'] ??
+            data['jumlah_survey'] ??
+            data['totalSurvey'] ??
+            data['surveys_count'] ??
+            data['count'] ??
+            0;
 
-        setState(() {
-          if (user is Map) {
-            _nama = (user['name'] ??
-                    user['nama'] ??
-                    user['username'] ??
+        _jumlahSurvey = int.tryParse('$jumlah') ?? 0;
+      }
+
+      // 2. Ambil data Profil (untuk memastikan nama akun yang sedang login tampil)
+      try {
+        final profileResult = await ApiService.getProfile();
+        final profileData = ApiService.unwrap(profileResult);
+
+        if (profileData is Map) {
+          final userData = profileData['user'] ?? profileData;
+          if (userData is Map) {
+            _nama = (userData['name'] ??
+                    userData['nama'] ??
+                    userData['username'] ??
                     'Pengguna')
                 .toString();
           }
-
-          final jumlah = data['total_surveys'] ??
-              data['survey_count'] ??
-              data['jumlah_survey'] ??
-              data['totalSurvey'];
-
-          _jumlahSurvey = int.tryParse('$jumlah') ?? 0;
-          _loading = false;
-        });
-      } else {
-        setState(() => _loading = false);
+        }
+      } catch (_) {
+        // Jika endpoint profile gagal, abaikan agar dashboard tetap terbuka
       }
+
+      setState(() {
+        _loading = false;
+      });
     } catch (e) {
       if (!mounted) return;
 
@@ -276,18 +293,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 14),
 
-            // Menu Data Survey
+            // Menu Data Survey dengan Auto-Refresh saat kembali
             _menuCard(
               icon: Icons.assignment,
               title: 'Data Survey',
               description: 'Lihat, tambah, edit, dan hapus data survey.',
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => SurveyScreen(),
                   ),
                 );
+                // Otomatis muat ulang data dashboard setelah kembali dari halaman survey
+                _loadDashboard();
               },
             ),
 
@@ -296,13 +315,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               icon: Icons.person_outline,
               title: 'Profil Saya',
               description: 'Lihat dan ubah informasi akun.',
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => const ProfileScreen(),
                   ),
                 );
+                _loadDashboard();
               },
             ),
 
